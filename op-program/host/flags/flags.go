@@ -20,11 +20,6 @@ func prefixEnvVars(name string) []string {
 }
 
 var (
-	RollupConfig = &cli.StringFlag{
-		Name:    "rollup.config",
-		Usage:   "Rollup chain parameters",
-		EnvVars: prefixEnvVars("ROLLUP_CONFIG"),
-	}
 	Network = &cli.StringFlag{
 		Name:    "network",
 		Usage:   fmt.Sprintf("Predefined network selection. Available networks: %s", strings.Join(chaincfg.AvailableNetworks(), ", ")),
@@ -35,40 +30,10 @@ var (
 		Usage:   "Directory to use for preimage data storage. Default uses in-memory storage",
 		EnvVars: prefixEnvVars("DATADIR"),
 	}
-	L2NodeAddr = &cli.StringFlag{
-		Name:    "l2",
-		Usage:   "Address of L2 JSON-RPC endpoint to use (eth and debug namespace required)",
-		EnvVars: prefixEnvVars("L2_RPC"),
-	}
 	L1Head = &cli.StringFlag{
 		Name:    "l1.head",
 		Usage:   "Hash of the L1 head block. Derivation stops after this block is processed.",
 		EnvVars: prefixEnvVars("L1_HEAD"),
-	}
-	L2Head = &cli.StringFlag{
-		Name:    "l2.head",
-		Usage:   "Hash of the L2 block at l2.outputroot",
-		EnvVars: prefixEnvVars("L2_HEAD"),
-	}
-	L2OutputRoot = &cli.StringFlag{
-		Name:    "l2.outputroot",
-		Usage:   "Agreed L2 Output Root to start derivation from",
-		EnvVars: prefixEnvVars("L2_OUTPUT_ROOT"),
-	}
-	L2Claim = &cli.StringFlag{
-		Name:    "l2.claim",
-		Usage:   "Claimed L2 output root to validate",
-		EnvVars: prefixEnvVars("L2_CLAIM"),
-	}
-	L2BlockNumber = &cli.Uint64Flag{
-		Name:    "l2.blocknumber",
-		Usage:   "Number of the L2 block that the claim is from",
-		EnvVars: prefixEnvVars("L2_BLOCK_NUM"),
-	}
-	L2GenesisPath = &cli.StringFlag{
-		Name:    "l2.genesis",
-		Usage:   "Path to the op-geth genesis file",
-		EnvVars: prefixEnvVars("L2_GENESIS"),
 	}
 	L1NodeAddr = &cli.StringFlag{
 		Name:    "l1",
@@ -112,18 +77,11 @@ var Flags []cli.Flag
 
 var requiredFlags = []cli.Flag{
 	L1Head,
-	L2Head,
-	L2OutputRoot,
-	L2Claim,
-	L2BlockNumber,
 }
 
 var programFlags = []cli.Flag{
-	RollupConfig,
 	Network,
 	DataDir,
-	L2NodeAddr,
-	L2GenesisPath,
 	L1NodeAddr,
 	L1BeaconAddr,
 	L1TrustRPC,
@@ -139,17 +97,6 @@ func init() {
 }
 
 func CheckRequired(ctx *cli.Context) error {
-	rollupConfig := ctx.String(RollupConfig.Name)
-	network := ctx.String(Network.Name)
-	if rollupConfig == "" && network == "" {
-		return fmt.Errorf("flag %s or %s is required", RollupConfig.Name, Network.Name)
-	}
-	if rollupConfig != "" && network != "" {
-		return fmt.Errorf("cannot specify both %s and %s", RollupConfig.Name, Network.Name)
-	}
-	if network == "" && ctx.String(L2GenesisPath.Name) == "" {
-		return fmt.Errorf("flag %s is required for custom networks", L2GenesisPath.Name)
-	}
 	for _, flag := range requiredFlags {
 		if !ctx.IsSet(flag.Names()[0]) {
 			return fmt.Errorf("flag %s is required", flag.Names()[0])

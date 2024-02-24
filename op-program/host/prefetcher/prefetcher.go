@@ -9,7 +9,6 @@ import (
 
 	preimage "github.com/ethereum-optimism/optimism/op-preimage"
 	"github.com/ethereum-optimism/optimism/op-program/client/l1"
-	"github.com/ethereum-optimism/optimism/op-program/client/l2"
 	"github.com/ethereum-optimism/optimism/op-program/client/mpt"
 	"github.com/ethereum-optimism/optimism/op-program/host/kvstore"
 	"github.com/ethereum-optimism/optimism/op-service/eth"
@@ -42,28 +41,19 @@ type L1PrecompileSource interface {
 	KZGPointEvaluation(input []byte) ([]byte, error)
 }
 
-type L2Source interface {
-	InfoAndTxsByHash(ctx context.Context, blockHash common.Hash) (eth.BlockInfo, types.Transactions, error)
-	NodeByHash(ctx context.Context, hash common.Hash) ([]byte, error)
-	CodeByHash(ctx context.Context, hash common.Hash) ([]byte, error)
-	OutputByRoot(ctx context.Context, root common.Hash) (eth.Output, error)
-}
-
 type Prefetcher struct {
 	logger        log.Logger
 	l1Fetcher     L1Source
 	l1BlobFetcher L1BlobSource
-	l2Fetcher     L2Source
 	lastHint      string
 	kvStore       kvstore.KV
 }
 
-func NewPrefetcher(logger log.Logger, l1Fetcher L1Source, l1BlobFetcher L1BlobSource, l2Fetcher L2Source, kvStore kvstore.KV) *Prefetcher {
+func NewPrefetcher(logger log.Logger, l1Fetcher L1Source, l1BlobFetcher L1BlobSource, kvStore kvstore.KV) *Prefetcher {
 	return &Prefetcher{
 		logger:        logger,
 		l1Fetcher:     NewRetryingL1Source(logger, l1Fetcher),
 		l1BlobFetcher: NewRetryingL1BlobSource(logger, l1BlobFetcher),
-		l2Fetcher:     NewRetryingL2Source(logger, l2Fetcher),
 		kvStore:       kvStore,
 	}
 }
@@ -191,54 +181,6 @@ func (p *Prefetcher) prefetch(ctx context.Context, hint string) error {
 			return err
 		}
 		return p.kvStore.Put(preimage.KZGPointEvaluationKey(inputHash).PreimageKey(), result[:])
-	case l2.HintL2BlockHeader, l2.HintL2Transactions:
-		if len(hintBytes) != 32 {
-			return fmt.Errorf("invalid L2 header/tx hint: %x", hint)
-		}
-		hash := common.Hash(hintBytes)
-		header, txs, err := p.l2Fetcher.InfoAndTxsByHash(ctx, hash)
-		if err != nil {
-			return fmt.Errorf("failed to fetch L2 block %s: %w", hash, err)
-		}
-		data, err := header.HeaderRLP()
-		if err != nil {
-			return fmt.Errorf("failed to encode header to RLP: %w", err)
-		}
-		err = p.kvStore.Put(preimage.Keccak256Key(hash).PreimageKey(), data)
-		if err != nil {
-			return err
-		}
-		return p.storeTransactions(txs)
-	case l2.HintL2StateNode:
-		if len(hintBytes) != 32 {
-			return fmt.Errorf("invalid L2 state node hint: %x", hint)
-		}
-		hash := common.Hash(hintBytes)
-		node, err := p.l2Fetcher.NodeByHash(ctx, hash)
-		if err != nil {
-			return fmt.Errorf("failed to fetch L2 state node %s: %w", hash, err)
-		}
-		return p.kvStore.Put(preimage.Keccak256Key(hash).PreimageKey(), node)
-	case l2.HintL2Code:
-		if len(hintBytes) != 32 {
-			return fmt.Errorf("invalid L2 code hint: %x", hint)
-		}
-		hash := common.Hash(hintBytes)
-		code, err := p.l2Fetcher.CodeByHash(ctx, hash)
-		if err != nil {
-			return fmt.Errorf("failed to fetch L2 contract code %s: %w", hash, err)
-		}
-		return p.kvStore.Put(preimage.Keccak256Key(hash).PreimageKey(), code)
-	case l2.HintL2Output:
-		if len(hintBytes) != 32 {
-			return fmt.Errorf("invalid L2 output hint: %x", hint)
-		}
-		hash := common.Hash(hintBytes)
-		output, err := p.l2Fetcher.OutputByRoot(ctx, hash)
-		if err != nil {
-			return fmt.Errorf("failed to fetch L2 output root %s: %w", hash, err)
-		}
-		return p.kvStore.Put(preimage.Keccak256Key(hash).PreimageKey(), output.Marshal())
 	}
 	return fmt.Errorf("unknown hint type: %v", hintType)
 }
