@@ -70,6 +70,11 @@ var (
 		Usage:   "Run in pre-image server mode without executing any client program.",
 		EnvVars: prefixEnvVars("SERVER"),
 	}
+	APIAddress = &cli.StringFlag{
+		Name:    "api.address",
+		Usage:   "Http API address.",
+		EnvVars: prefixEnvVars("API_ADDRESS"),
+	}
 )
 
 // Flags contains the list of configuration options available to the binary.

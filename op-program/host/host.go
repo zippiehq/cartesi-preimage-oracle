@@ -115,7 +115,7 @@ func FaultProofProgram(ctx context.Context, logger log.Logger, cfg *config.Confi
 		return nil
 	} else {
 		go func() {
-			httpServer(logger, ":8090", pHostRW, hHostRW)
+			httpServer(logger, cfg.APIAddress, pHostRW, hHostRW)
 		}()
 		return cl.RunProgram(logger, pClientRW, hClientRW)
 	}
