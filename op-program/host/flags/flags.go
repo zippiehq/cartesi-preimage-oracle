@@ -93,6 +93,7 @@ var programFlags = []cli.Flag{
 	L1RPCProviderKind,
 	Exec,
 	Server,
+	APIAddress,
 }
 
 func init() {
