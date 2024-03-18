@@ -3,23 +3,17 @@ package host
 import (
 	"context"
 	"encoding/hex"
-	"errors"
 	"fmt"
-	"io"
-	"io/fs"
 	"net/http"
 	"os"
-	"os/exec"
 	"strings"
 
 	preimage "github.com/ethereum-optimism/optimism/op-preimage"
-	cl "github.com/ethereum-optimism/optimism/op-program/client"
 	"github.com/ethereum-optimism/optimism/op-program/client/l1"
 	"github.com/ethereum-optimism/optimism/op-program/host/config"
 	"github.com/ethereum-optimism/optimism/op-program/host/flags"
 	"github.com/ethereum-optimism/optimism/op-program/host/kvstore"
 	"github.com/ethereum-optimism/optimism/op-program/host/prefetcher"
-	oppio "github.com/ethereum-optimism/optimism/op-program/io"
 	opservice "github.com/ethereum-optimism/optimism/op-service"
 	"github.com/ethereum-optimism/optimism/op-service/client"
 	"github.com/ethereum-optimism/optimism/op-service/sources"
@@ -38,109 +32,16 @@ func Main(logger log.Logger, cfg *config.Config) error {
 	}
 	opservice.ValidateEnvVars(flags.EnvVarPrefix, flags.Flags, logger)
 
-	ctx := context.Background()
-	if cfg.ServerMode {
-		preimageChan := cl.CreatePreimageChannel()
-		hinterChan := cl.CreateHinterChannel()
-		return PreimageServer(ctx, logger, cfg, preimageChan, hinterChan)
-	}
-
-	if err := FaultProofProgram(ctx, logger, cfg); err != nil {
-		return err
-	}
-	log.Info("Claim successfully verified")
-	return nil
-}
-
-// FaultProofProgram is the programmatic entry-point for the fault proof program
-func FaultProofProgram(ctx context.Context, logger log.Logger, cfg *config.Config) error {
-	var (
-		serverErr chan error
-		pClientRW oppio.FileChannel
-		hClientRW oppio.FileChannel
-	)
-	defer func() {
-		if pClientRW != nil {
-			_ = pClientRW.Close()
-		}
-		if hClientRW != nil {
-			_ = hClientRW.Close()
-		}
-		if serverErr != nil {
-			err := <-serverErr
-			if err != nil {
-				logger.Error("preimage server failed", "err", err)
-			}
-			logger.Debug("Preimage server stopped")
-		}
-	}()
-	// Setup client I/O for preimage oracle interaction
-	pClientRW, pHostRW, err := oppio.CreateBidirectionalChannel()
-	if err != nil {
-		return fmt.Errorf("failed to create preimage pipe: %w", err)
-	}
-
-	// Setup client I/O for hint comms
-	hClientRW, hHostRW, err := oppio.CreateBidirectionalChannel()
-	if err != nil {
-		return fmt.Errorf("failed to create hints pipe: %w", err)
-	}
-
-	// Use a channel to receive the server result so we can wait for it to complete before returning
-	serverErr = make(chan error)
-	go func() {
-		defer close(serverErr)
-		serverErr <- PreimageServer(ctx, logger, cfg, pHostRW, hHostRW)
-	}()
-
-	var cmd *exec.Cmd
-	if cfg.ExecCmd != "" {
-		cmd = exec.CommandContext(ctx, cfg.ExecCmd)
-		cmd.ExtraFiles = make([]*os.File, cl.MaxFd-3) // not including stdin, stdout and stderr
-		cmd.ExtraFiles[cl.HClientRFd-3] = hClientRW.Reader()
-		cmd.ExtraFiles[cl.HClientWFd-3] = hClientRW.Writer()
-		cmd.ExtraFiles[cl.PClientRFd-3] = pClientRW.Reader()
-		cmd.ExtraFiles[cl.PClientWFd-3] = pClientRW.Writer()
-		cmd.Stdout = os.Stdout // for debugging
-		cmd.Stderr = os.Stderr // for debugging
-
-		err := cmd.Start()
-		if err != nil {
-			return fmt.Errorf("program cmd failed to start: %w", err)
-		}
-		if err := cmd.Wait(); err != nil {
-			return fmt.Errorf("failed to wait for child program: %w", err)
-		}
-		logger.Debug("Client program completed successfully")
-		return nil
-	} else {
-		go func() {
-			httpServer(logger, cfg.APIAddress, pHostRW, hHostRW)
-		}()
-		return cl.RunProgram(logger, pClientRW, hClientRW)
-	}
+	return PreimageServer(context.Background(), logger, cfg)
 }
 
 // PreimageServer reads hints and preimage requests from the provided channels and processes those requests.
 // This method will block until both the hinter and preimage handlers complete.
 // If either returns an error both handlers are stopped.
 // The supplied preimageChannel and hintChannel will be closed before this function returns.
-func PreimageServer(ctx context.Context, logger log.Logger, cfg *config.Config, preimageChannel oppio.FileChannel, hintChannel oppio.FileChannel) error {
-	var serverDone chan error
-	var hinterDone chan error
-	defer func() {
-		preimageChannel.Close()
-		hintChannel.Close()
-		if serverDone != nil {
-			// Wait for pre-image server to complete
-			<-serverDone
-		}
-		if hinterDone != nil {
-			// Wait for hinter to complete
-			<-hinterDone
-		}
-	}()
+func PreimageServer(ctx context.Context, logger log.Logger, cfg *config.Config) error {
 	logger.Info("Starting preimage server")
+
 	var kv kvstore.KV
 	if cfg.DataDir == "" {
 		logger.Info("Using in-memory storage")
@@ -154,37 +55,26 @@ func PreimageServer(ctx context.Context, logger log.Logger, cfg *config.Config, 
 	}
 
 	var (
-		getPreimage kvstore.PreimageSource
-		hinter      preimage.HintHandler
+		preimageSource kvstore.PreimageSource
+		hintHander     preimage.HintHandler
 	)
 	if cfg.FetchingEnabled() {
 		prefetch, err := makePrefetcher(ctx, logger, kv, cfg)
 		if err != nil {
 			return fmt.Errorf("failed to create prefetcher: %w", err)
 		}
-		getPreimage = func(key common.Hash) ([]byte, error) { return prefetch.GetPreimage(ctx, key) }
-		hinter = prefetch.Hint
+		preimageSource = func(key common.Hash) ([]byte, error) { return prefetch.GetPreimage(ctx, key) }
+		hintHander = prefetch.Hint
 	} else {
 		logger.Info("Using offline mode. All required pre-images must be pre-populated.")
-		getPreimage = kv.Get
-		hinter = func(hint string) error {
+		preimageSource = kv.Get
+		hintHander = func(hint string) error {
 			logger.Debug("ignoring prefetch hint", "hint", hint)
 			return nil
 		}
 	}
 
-	localPreimageSource := kvstore.NewLocalPreimageSource(cfg)
-	splitter := kvstore.NewPreimageSourceSplitter(localPreimageSource.Get, getPreimage)
-	preimageGetter := preimage.WithVerification(splitter.Get)
-
-	serverDone = launchOracleServer(logger, preimageChannel, preimageGetter)
-	hinterDone = routeHints(logger, hintChannel, hinter)
-	select {
-	case err := <-serverDone:
-		return err
-	case err := <-hinterDone:
-		return err
-	}
+	return httpServer(logger, cfg.APIAddress, preimageSource, hintHander)
 }
 
 func makePrefetcher(ctx context.Context, logger log.Logger, kv kvstore.KV, cfg *config.Config) (*prefetcher.Prefetcher, error) {
@@ -204,50 +94,12 @@ func makePrefetcher(ctx context.Context, logger log.Logger, kv kvstore.KV, cfg *
 	return prefetcher.NewPrefetcher(logger, l1Cl, l1BlobFetcher, kv), nil
 }
 
-func routeHints(logger log.Logger, hHostRW io.ReadWriter, hinter preimage.HintHandler) chan error {
-	chErr := make(chan error)
-	hintReader := preimage.NewHintReader(hHostRW)
-	go func() {
-		defer close(chErr)
-		for {
-			if err := hintReader.NextHint(hinter); err != nil {
-				if err == io.EOF || errors.Is(err, fs.ErrClosed) {
-					logger.Debug("closing pre-image hint handler")
-					return
-				}
-				logger.Error("pre-image hint router error", "err", err)
-				chErr <- err
-				return
-			}
-		}
-	}()
-	return chErr
-}
-
-func launchOracleServer(logger log.Logger, pHostRW io.ReadWriteCloser, getter preimage.PreimageGetter) chan error {
-	chErr := make(chan error)
-	server := preimage.NewOracleServer(pHostRW)
-	go func() {
-		defer close(chErr)
-		for {
-			if err := server.NextPreimageRequest(getter); err != nil {
-				if err == io.EOF || errors.Is(err, fs.ErrClosed) {
-					logger.Debug("closing pre-image server")
-					return
-				}
-				logger.Error("pre-image server error", "error", err)
-				chErr <- err
-				return
-			}
-		}
-	}()
-	return chErr
-}
-
-func httpServer(logger log.Logger, hostPort string, preimageChannel oppio.FileChannel, hintChannel oppio.FileChannel) {
-	pClient := preimage.NewOracleClient(preimageChannel)
-	hClient := preimage.NewHintWriter(hintChannel)
-
+func httpServer(
+	logger log.Logger,
+	hostPort string,
+	preimageSource kvstore.PreimageSource,
+	hintHandler preimage.HintHandler,
+) error {
 	http.HandleFunc("/dehash", func(w http.ResponseWriter, req *http.Request) {
 		keyStr := req.URL.Path[len("/dehash/"):]
 		key, err := hex.DecodeString(keyStr)
@@ -257,39 +109,38 @@ func httpServer(logger log.Logger, hostPort string, preimageChannel oppio.FileCh
 			return
 		}
 
-		val := pClient.Get(preimage.BlobKey(key[:32]))
-		w.WriteHeader(http.StatusOK)
-		w.Header().Add("Content-type", "application/octet-stream")
-		if _, err = w.Write(val); err != nil {
-			logger.Error("failed to write preimage value to http response - %s", err)
+		val, err := preimageSource(common.Hash(key[:common.HashLength]))
+		if err != nil {
+			logger.Error("failed to get preimage value for key %s - %s", keyStr, err)
+			w.WriteHeader(http.StatusNotFound)
+		} else {
+			w.WriteHeader(http.StatusOK)
+			w.Header().Add("Content-type", "application/octet-stream")
+			if _, err = w.Write(val); err != nil {
+				logger.Error("failed to write preimage value to http response - %s", err)
+			}
 		}
 	})
 
 	http.HandleFunc("/hint", func(w http.ResponseWriter, req *http.Request) {
-		hintStr := req.URL.Path[len("/hint/"):]
-		hintVal := common.Hash([]byte(hintStr)[common.HashLength:])
+		hint := req.URL.Path[len("/hint/"):]
 
-		var hint preimage.Hint
-		if strings.Contains(hintStr, l1.HintL1BlockHeader) {
-			hint = l1.BlockHeaderHint(hintVal)
-		} else if strings.Contains(hintStr, l1.HintL1Transactions) {
-			hint = l1.TransactionsHint(hintVal)
-		} else if strings.Contains(hintStr, l1.HintL1Receipts) {
-			hint = l1.ReceiptsHint(hintVal)
-		} else if strings.Contains(hintStr, l1.HintL1Blob) {
-			hint = l1.BlobHint([]byte(hintStr))
-		} else if strings.Contains(hintStr, l1.HintL1KZGPointEvaluation) {
-			hint = l1.KZGPointEvaluationHint([]byte(hintStr))
-		} else {
+		if strings.Contains(hint, l1.HintL1BlockHeader) ||
+			strings.Contains(hint, l1.HintL1Transactions) ||
+			strings.Contains(hint, l1.HintL1Receipts) ||
+			strings.Contains(hint, l1.HintL1Blob) ||
+			strings.Contains(hint, l1.HintL1KZGPointEvaluation) {
 			logger.Error("invalid hint type")
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
-		hClient.Hint(hint)
+
+		hintHandler(hint)
+
 		w.WriteHeader(http.StatusOK)
 		w.Header().Add("Content-type", "application/octet-stream")
 		w.Write([]byte("ok"))
 	})
 
-	http.ListenAndServe(hostPort, nil)
+	return http.ListenAndServe(hostPort, nil)
 }
