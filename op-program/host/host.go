@@ -100,46 +100,49 @@ func httpServer(
 	preimageSource kvstore.PreimageSource,
 	hintHandler preimage.HintHandler,
 ) error {
-	http.HandleFunc("/dehash", func(w http.ResponseWriter, req *http.Request) {
+	http.HandleFunc("/dehash/", func(w http.ResponseWriter, req *http.Request) {
 		keyStr := req.URL.Path[len("/dehash/"):]
 		key, err := hex.DecodeString(keyStr)
 		if err != nil {
-			logger.Error("failed to decode key from hex - %s", err)
+			logger.Error("failed to decode key from hex", err)
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
 		val, err := preimageSource(common.Hash(key[:common.HashLength]))
 		if err != nil {
-			logger.Error("failed to get preimage value for key %s - %s", keyStr, err)
+			logger.Error("failed to get preimage value for key", keyStr, err)
 			w.WriteHeader(http.StatusNotFound)
 		} else {
 			w.WriteHeader(http.StatusOK)
 			w.Header().Add("Content-type", "application/octet-stream")
 			if _, err = w.Write(val); err != nil {
-				logger.Error("failed to write preimage value to http response - %s", err)
+				logger.Error("failed to write preimage value to http response", err)
 			}
 		}
 	})
 
-	http.HandleFunc("/hint", func(w http.ResponseWriter, req *http.Request) {
+	http.HandleFunc("/hint/", func(w http.ResponseWriter, req *http.Request) {
 		hint := req.URL.Path[len("/hint/"):]
 
-		if strings.Contains(hint, l1.HintL1BlockHeader) ||
-			strings.Contains(hint, l1.HintL1Transactions) ||
-			strings.Contains(hint, l1.HintL1Receipts) ||
-			strings.Contains(hint, l1.HintL1Blob) ||
-			strings.Contains(hint, l1.HintL1KZGPointEvaluation) {
+		if !strings.Contains(hint, l1.HintL1BlockHeader) &&
+			!strings.Contains(hint, l1.HintL1Transactions) &&
+			!strings.Contains(hint, l1.HintL1Receipts) &&
+			!strings.Contains(hint, l1.HintL1Blob) &&
+			!strings.Contains(hint, l1.HintL1KZGPointEvaluation) {
 			logger.Error("invalid hint type")
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
-		hintHandler(hint)
-
-		w.WriteHeader(http.StatusOK)
-		w.Header().Add("Content-type", "application/octet-stream")
-		w.Write([]byte("ok"))
+		if err := hintHandler(hint); err != nil {
+			logger.Error("failed to process hint", err)
+			w.WriteHeader(http.StatusBadRequest)
+		} else {
+			w.WriteHeader(http.StatusOK)
+			w.Header().Add("Content-type", "application/octet-stream")
+			w.Write([]byte("ok"))
+		}
 	})
 
 	return http.ListenAndServe(hostPort, nil)
