@@ -108,6 +108,7 @@ func httpServer(
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
+		key[0] = 2 // keccak256
 
 		val, err := preimageSource(common.Hash(key[:common.HashLength]))
 		if err != nil {
