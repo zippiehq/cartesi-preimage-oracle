@@ -50,6 +50,8 @@ type Config struct {
 
 	// IsCustomChainConfig indicates that the program uses a custom chain configuration
 	IsCustomChainConfig bool
+
+	APIAddress string
 }
 
 func (c *Config) Check() error {
@@ -98,6 +100,7 @@ func NewConfigFromCLI(log log.Logger, ctx *cli.Context) (*Config, error) {
 		L1RPCKind:           sources.RPCProviderKind(ctx.String(flags.L1RPCProviderKind.Name)),
 		ExecCmd:             ctx.String(flags.Exec.Name),
 		ServerMode:          ctx.Bool(flags.Server.Name),
+		APIAddress:          ctx.String(flags.APIAddress.Name),
 		IsCustomChainConfig: false,
 	}, nil
 }
