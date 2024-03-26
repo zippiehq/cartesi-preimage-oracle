@@ -181,8 +181,8 @@ importers:
         specifier: ^7.99.0
         version: 7.99.0
       bcfg:
-        specifier: ^0.2.1
-        version: 0.2.1
+        specifier: ^0.2.2
+        version: 0.2.2
       body-parser:
         specifier: ^1.20.2
         version: 1.20.2
@@ -7478,11 +7478,11 @@ packages:
       safe-buffer: 5.1.2
     dev: false
 
-  /bcfg@0.2.1:
-    resolution: {integrity: sha512-Q69DG2V9QJexdXvYoiXM4xfQ5m65tIOAzJCcW4USQdvbWEJJqBQ9MEDdyJb2ei5fadAJPVp8rUpLbFnkC37FZA==}
-    engines: {node: '>=8.0.0'}
+  /bcfg@0.2.2:
+    resolution: {integrity: sha512-xa7hYK8ZgEV/Wjh+EJiKLLd+h8A0HGyhyntNMvKCeXIGepLqKUL3KYOE5zFz8EBv8sS3XruD5YPmYIjtwFOrZA==}
+    engines: {node: '>=14.0.0'}
     dependencies:
-      bsert: 0.0.10
+      bsert: 0.0.13
     dev: false
 
   /bcrypt-pbkdf@1.0.2:
@@ -7701,8 +7701,8 @@ packages:
       node-int64: 0.4.0
     dev: true
 
-  /bsert@0.0.10:
-    resolution: {integrity: sha512-NHNwlac+WPy4t2LoNh8pXk8uaIGH3NSaIUbTTRXGpE2WEbq0te/tDykYHkFK57YKLPjv/aGHmbqvnGeVWDz57Q==}
+  /bsert@0.0.13:
+    resolution: {integrity: sha512-gYzSj8I2lDTKvl4aRSYs2CZIpeJugq7RjGhLRG+Jl//gEW5B2u1MKB6exVCL09FqYj6JRQAAgRwQHMOWvr7A8A==}
     engines: {node: '>=8.0.0'}
     dev: false
 
