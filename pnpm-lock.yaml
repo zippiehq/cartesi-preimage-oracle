@@ -267,7 +267,7 @@ importers:
     dependencies:
       '@testing-library/react':
         specifier: ^14.2.1
-        version: 14.2.1(react-dom@18.2.0)(react@18.2.0)
+        version: 14.2.1(react-dom@18.3.1)(react@18.2.0)
       '@types/change-case':
         specifier: ^2.3.1
         version: 2.3.1
@@ -278,8 +278,8 @@ importers:
         specifier: ^18.2.0
         version: 18.2.0
       react-dom:
-        specifier: ^18.2.0
-        version: 18.2.0(react@18.2.0)
+        specifier: ^18.3.1
+        version: 18.3.1(react@18.2.0)
       viem:
         specifier: ^2.7.6
         version: 2.7.6(typescript@5.3.3)(zod@3.22.4)
@@ -292,7 +292,7 @@ importers:
         version: 6.4.2(vitest@1.2.2)
       '@testing-library/react-hooks':
         specifier: ^8.0.1
-        version: 8.0.1(react-dom@18.2.0)(react@18.2.0)
+        version: 8.0.1(react-dom@18.3.1)(react@18.2.0)
       '@types/glob':
         specifier: ^8.1.0
         version: 8.1.0
@@ -334,7 +334,7 @@ importers:
         version: 1.2.2(@types/node@20.11.17)(jsdom@24.0.0)
       wagmi:
         specifier: ^2.5.5
-        version: 2.5.5(@tanstack/react-query@5.17.1)(react-dom@18.2.0)(react-native@0.73.1)(react@18.2.0)(typescript@5.3.3)(viem@2.7.6)
+        version: 2.5.5(@tanstack/react-query@5.17.1)(react-dom@18.3.1)(react-native@0.73.1)(react@18.2.0)(typescript@5.3.3)(viem@2.7.6)
 
   packages/core-utils:
     dependencies:
@@ -3794,14 +3794,14 @@ packages:
       i18next: 22.5.1
       qr-code-styling: 1.6.0-rc.1
       react: 18.2.0
-      react-dom: 18.2.0(react@18.2.0)
-      react-i18next: 13.5.0(i18next@22.5.1)(react-dom@18.2.0)(react-native@0.73.1)(react@18.2.0)
+      react-dom: 18.3.1(react@18.2.0)
+      react-i18next: 13.5.0(i18next@22.5.1)(react-dom@18.3.1)(react-native@0.73.1)(react@18.2.0)
     transitivePeerDependencies:
       - '@types/react'
       - react-native
     dev: true
 
-  /@metamask/sdk@0.14.1(react-dom@18.2.0)(react-native@0.73.1)(react@18.2.0):
+  /@metamask/sdk@0.14.1(react-dom@18.3.1)(react-native@0.73.1)(react@18.2.0):
     resolution: {integrity: sha512-52kfvnlyMXRO8/oPGoQOFMevSjgkLzpl8aGG6Ivx/6jiqSv5ScuOg6YdSWXR937Ts0zWE0V8KTUBMfnGGt0S9Q==}
     peerDependencies:
       react: ^18.2.0
@@ -3831,7 +3831,7 @@ packages:
       pump: 3.0.0
       qrcode-terminal-nooctal: 0.12.1
       react: 18.2.0
-      react-i18next: 13.5.0(i18next@22.5.1)(react-dom@18.2.0)(react-native@0.73.1)(react@18.2.0)
+      react-i18next: 13.5.0(i18next@22.5.1)(react-dom@18.3.1)(react-native@0.73.1)(react@18.2.0)
       react-native: 0.73.1(@babel/core@7.22.10)(@babel/preset-env@7.23.7)(react@18.2.0)
       react-native-webview: 11.26.1(react-native@0.73.1)(react@18.2.0)
       readable-stream: 2.3.8
@@ -5569,7 +5569,7 @@ packages:
       vitest: 1.2.2(@types/node@20.11.17)(jsdom@24.0.0)
     dev: true
 
-  /@testing-library/react-hooks@8.0.1(react-dom@18.2.0)(react@18.2.0):
+  /@testing-library/react-hooks@8.0.1(react-dom@18.3.1)(react@18.2.0):
     resolution: {integrity: sha512-Aqhl2IVmLt8IovEVarNDFuJDVWVvhnr9/GCU6UUnrYXwgDFF9h2L2o2P9KBni1AST5sT6riAyoukFLyjQUgD/g==}
     engines: {node: '>=12'}
     peerDependencies:
@@ -5587,7 +5587,7 @@ packages:
     dependencies:
       '@babel/runtime': 7.22.6
       react: 18.2.0
-      react-dom: 18.2.0(react@18.2.0)
+      react-dom: 18.3.1(react@18.2.0)
       react-error-boundary: 3.1.4(react@18.2.0)
     dev: true
 
@@ -5612,7 +5612,7 @@ packages:
       react-error-boundary: 3.1.4(react@17.0.2)
     dev: true
 
-  /@testing-library/react@14.2.1(react-dom@18.2.0)(react@18.2.0):
+  /@testing-library/react@14.2.1(react-dom@18.3.1)(react@18.2.0):
     resolution: {integrity: sha512-sGdjws32ai5TLerhvzThYFbpnF9XtL65Cjf+gB0Dhr29BGqK+mAeN7SURSdu+eqgET4ANcWoC7FQpkaiGvBr+A==}
     engines: {node: '>=14'}
     peerDependencies:
@@ -5623,7 +5623,7 @@ packages:
       '@testing-library/dom': 9.3.1
       '@types/react-dom': 18.2.7
       react: 18.2.0
-      react-dom: 18.2.0(react@18.2.0)
+      react-dom: 18.3.1(react@18.2.0)
     dev: false
 
   /@textlint/ast-node-types@12.2.1:
@@ -6363,7 +6363,7 @@ packages:
       - utf-8-validate
     dev: true
 
-  /@wagmi/connectors@4.1.12(@wagmi/core@2.6.3)(react-dom@18.2.0)(react-native@0.73.1)(react@18.2.0)(typescript@5.3.3)(viem@2.7.6):
+  /@wagmi/connectors@4.1.12(@wagmi/core@2.6.3)(react-dom@18.3.1)(react-native@0.73.1)(react@18.2.0)(typescript@5.3.3)(viem@2.7.6):
     resolution: {integrity: sha512-zqCJMOwpi8ssFjndVxVh3iUMwzcA7dPCjswhcy4xZyy1jm/VvGYC3o1wotq/gTCqUrz0SPIMGimZm4S6865b8A==}
     peerDependencies:
       '@wagmi/core': 2.6.3
@@ -6374,7 +6374,7 @@ packages:
         optional: true
     dependencies:
       '@coinbase/wallet-sdk': 3.9.1
-      '@metamask/sdk': 0.14.1(react-dom@18.2.0)(react-native@0.73.1)(react@18.2.0)
+      '@metamask/sdk': 0.14.1(react-dom@18.3.1)(react-native@0.73.1)(react@18.2.0)
       '@safe-global/safe-apps-provider': 0.18.1(typescript@5.3.3)
       '@safe-global/safe-apps-sdk': 8.1.0(typescript@5.3.3)
       '@wagmi/core': 2.6.3(react@18.2.0)(typescript@5.3.3)(viem@2.7.6)
@@ -14747,14 +14747,14 @@ packages:
       - utf-8-validate
     dev: true
 
-  /react-dom@18.2.0(react@18.2.0):
-    resolution: {integrity: sha512-6IMTriUmvsjHUjNtEDudZfuDQUoWXVxKHhlEGSk81n4YFS+r/Kl99wXiwlVXtPBtJenozv2P+hxDsw9eA7Xo6g==}
+  /react-dom@18.3.1(react@18.2.0):
+    resolution: {integrity: sha512-5m4nQKp+rZRb09LNH59GM4BxTh9251/ylbKIbpe7TpGxfJ+9kv6BLkLBXIjjspbgbnIBNqlI23tRnTWT0snUIw==}
     peerDependencies:
-      react: ^18.2.0
+      react: ^18.3.1
     dependencies:
       loose-envify: 1.4.0
       react: 18.2.0
-      scheduler: 0.23.0
+      scheduler: 0.23.2
 
   /react-error-boundary@3.1.4(react@17.0.2):
     resolution: {integrity: sha512-uM9uPzZJTF6wRQORmSrvOIgt4lJ9MC1sNgEOj2XGsDTRE4kmpWxg7ENK9EWNKJRMAOY9z0MuF4yIfl6gp4sotA==}
@@ -14776,7 +14776,7 @@ packages:
       react: 18.2.0
     dev: true
 
-  /react-i18next@13.5.0(i18next@22.5.1)(react-dom@18.2.0)(react-native@0.73.1)(react@18.2.0):
+  /react-i18next@13.5.0(i18next@22.5.1)(react-dom@18.3.1)(react-native@0.73.1)(react@18.2.0):
     resolution: {integrity: sha512-CFJ5NDGJ2MUyBohEHxljOq/39NQ972rh1ajnadG9BjTk+UXbHLq4z5DKEbEQBDoIhUmmbuS/fIMJKo6VOax1HA==}
     peerDependencies:
       i18next: '>= 23.2.3'
@@ -14793,7 +14793,7 @@ packages:
       html-parse-stringify: 3.0.1
       i18next: 22.5.1
       react: 18.2.0
-      react-dom: 18.2.0(react@18.2.0)
+      react-dom: 18.3.1(react@18.2.0)
       react-native: 0.73.1(@babel/core@7.22.10)(@babel/preset-env@7.23.7)(react@18.2.0)
     dev: true
 
@@ -15457,8 +15457,8 @@ packages:
       xmlchars: 2.2.0
     dev: true
 
-  /scheduler@0.23.0:
-    resolution: {integrity: sha512-CtuThmgHNg7zIZWAXi3AsyIzA3n4xx7aNyjwC2VJldO2LMVDhFK+63xGqq6CsJH4rTAt6/M+N4GhZiDYPx9eUw==}
+  /scheduler@0.23.2:
+    resolution: {integrity: sha512-UOShsPwz7NrMUqhR6t0hWjFduvOzbtv7toDH1/hIrfRNIDBnnBWd0CwJTGvTpngVlmwGCdP9/Zl/tVrDqcuYzQ==}
     dependencies:
       loose-envify: 1.4.0
 
@@ -17356,7 +17356,7 @@ packages:
       xml-name-validator: 5.0.0
     dev: true
 
-  /wagmi@2.5.5(@tanstack/react-query@5.17.1)(react-dom@18.2.0)(react-native@0.73.1)(react@18.2.0)(typescript@5.3.3)(viem@2.7.6):
+  /wagmi@2.5.5(@tanstack/react-query@5.17.1)(react-dom@18.3.1)(react-native@0.73.1)(react@18.2.0)(typescript@5.3.3)(viem@2.7.6):
     resolution: {integrity: sha512-U9F5+e4bFXhSvIAWaImP4oCDXnOG/7q1xnBlkWBwbGy+oWg3BBiD01BZUnkplFGu6scSZ+TPURGtOkwH0rnxBQ==}
     peerDependencies:
       '@tanstack/react-query': '>=5.0.0'
@@ -17368,7 +17368,7 @@ packages:
         optional: true
     dependencies:
       '@tanstack/react-query': 5.17.1(react@18.2.0)
-      '@wagmi/connectors': 4.1.12(@wagmi/core@2.6.3)(react-dom@18.2.0)(react-native@0.73.1)(react@18.2.0)(typescript@5.3.3)(viem@2.7.6)
+      '@wagmi/connectors': 4.1.12(@wagmi/core@2.6.3)(react-dom@18.3.1)(react-native@0.73.1)(react@18.2.0)(typescript@5.3.3)(viem@2.7.6)
       '@wagmi/core': 2.6.3(react@18.2.0)(typescript@5.3.3)(viem@2.7.6)
       react: 18.2.0
       typescript: 5.3.3
