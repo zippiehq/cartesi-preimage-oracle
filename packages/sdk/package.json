@@ -46,7 +46,7 @@
     "@types/mocha": "^10.0.6",
     "@types/node": "^20.11.17",
     "@types/semver": "^7.5.7",
-    "chai-as-promised": "^7.1.1",
+    "chai-as-promised": "^8.0.0",
     "ethereum-waffle": "^4.0.10",
     "ethers": "^5.7.2",
     "hardhat": "^2.19.5",
